@@ -1,0 +1,99 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int      @id @default(autoincrement())
+  username String   @unique
+  password String
+  email    String   @unique
+  role     Role     @default(USER)
+  createAt DateTime @default(now()) @db.Timestamp(0)
+  updateAt DateTime @updatedAt @db.Timestamp(0)
+
+  task  Task[]
+  event Event[]
+  date  Date[]
+  Order Order[]
+}
+
+model Order {
+  id       Int      @id @default(autoincrement())
+  weigth   String
+  quantity Int
+  price    Float
+  message  String
+  userId   Int
+  user     User     @relation(fields: [userId], references: [id])
+  createAt DateTime @default(now()) @db.Timestamp(0)
+  updateAt DateTime @updatedAt @db.Timestamp(0)
+}
+
+model Event {
+  id       Int      @id @default(autoincrement())
+  header   String?  @db.Text
+  detail   String?  @db.Text
+  image    String?
+  createAt DateTime @default(now()) @db.Timestamp(0)
+  updateAt DateTime @updatedAt @db.Timestamp(0)
+  userId   Int?
+  user     User?    @relation(fields: [userId], references: [id])
+}
+
+model Task {
+  id          Int      @id @default(autoincrement())
+  task_header String
+  task_detail String
+  createAt    DateTime @default(now()) @db.Timestamp(0)
+  updateAt    DateTime @updatedAt @db.Timestamp(0)
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Date {
+  id       Int      @id @default(autoincrement())
+  date     String
+  createAt DateTime @default(now()) @db.Timestamp(0)
+  updateAt DateTime @updatedAt @db.Timestamp(0)
+  userId   Int
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  field    Field[] // Remove onDelete from here
+}
+
+model Field {
+  id        Int        @id @default(autoincrement())
+  fieldName String
+  createAt  DateTime   @default(now()) @db.Timestamp(0)
+  updateAt  DateTime   @updatedAt @db.Timestamp(0)
+  waterings Watering[]
+  dateId    Int
+  date      Date       @relation(fields: [dateId], references: [id], onDelete: Cascade) // Put onDelete here
+}
+
+model Watering {
+  id        Int      @id @default(autoincrement())
+  status    String
+  firstTime String
+  lastTime  String
+  duration  Int
+  createAt  DateTime @default(now()) @db.Timestamp(0)
+  updateAt  DateTime @updatedAt @db.Timestamp(0)
+  fieldId   Int
+  field     Field    @relation(fields: [fieldId], references: [id], onDelete: Cascade) // ลบ Watering เมื่อลบ Field
+}
+
+enum Role {
+  ADMIN
+  USER
+}
